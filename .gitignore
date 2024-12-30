@@ -11,6 +11,9 @@
 /data/
 /etc/
 
+### vectorstore ###
+/movie_4000_vectorstore/
+
 
 # templates ---------------------------------------
 ### Byte-compiled / optimized / DLL files ###
