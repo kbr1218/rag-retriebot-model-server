@@ -8,6 +8,7 @@
 .idea/
 .vscode/
 */cache/*
+/data/
 
 
 # templates ---------------------------------------
