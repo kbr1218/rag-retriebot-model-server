@@ -12,8 +12,9 @@
 /etc/
 
 ### vectorstore ###
-/movie_4000_vectorstore/
-
+*/movie_4000_vectorstore_1/
+*/movie_4000_vectorstore_2/
+*/movie_4000_vectorstore_3/
 
 # templates ---------------------------------------
 ### Byte-compiled / optimized / DLL files ###
