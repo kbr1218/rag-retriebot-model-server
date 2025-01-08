@@ -17,6 +17,8 @@
 */movie_4000_vectorstore_3/
 */movie_4000_vectorstore_chroma/
 */movie_4000_vectorstore_faiss/
+*/movies_vectorstore_faiss_800/
+*/movies_vectorstore_faiss_1500/
 
 # templates ---------------------------------------
 ### Byte-compiled / optimized / DLL files ###
