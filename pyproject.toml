@@ -98,6 +98,10 @@ mypy = "^1.11.2"
 selenium = "^4.26.1"
 weaviate = "^0.1.2"
 
+# FastAPI 서버 관련 패키지
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
+
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
