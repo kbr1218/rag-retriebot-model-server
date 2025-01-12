@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from api.default import default_chain
-from api.recommend import recommend_chain, format_change
+from api.recommend import recommend_chain
 
 app = FastAPI()
 
@@ -25,6 +25,5 @@ def load_default(userid: str, user_input: UserInput):
 # 추천요청 체인
 @app.post('/api/{userid}/recommend')
 def load_recommend(userid: str, user_input: UserInput):
-  formatted_input = format_change({"type": "추천요청"}, user_input.input_text)
-  response = recommend_chain.invoke(formatted_input)
+  response = recommend_chain.invoke(user_input.input_text)
   return response

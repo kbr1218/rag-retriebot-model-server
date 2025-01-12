@@ -72,7 +72,7 @@ Do not generate answers that are not directly supported by the context.
 {{"candidates": []}}```
 
 [사용자 입력과 사용자 입력값의 유형]:
-{formatted_string}
+{user_input}
 
 [Context]:
 {recommend_chain_retriever}
@@ -106,17 +106,9 @@ def load_gpt(system_instruction):
 system_instruction = """you are a movie-recommendation chatbot. you must answer based on given data."""
 recommend_chain_llm = load_gemini(system_instruction)
 
-# 딕셔너리 자료형을 string으로 변환하는 함수
-def format_change(classification_result: dict, user_input: str) -> str:
-    type_value = classification_result.get("classification_result", {}).get("type", "일반대화")
-
-    # string 자료형으로 변경
-    formatted_str = f"type: '{type_value}', user_input: '{user_input}'"
-    return formatted_str
-
 # langchain 체인 구성
 recommend_chain = (
-  {"formatted_string":RunnablePassthrough(),
+  {"user_input":RunnablePassthrough(),
     "recommend_chain_retriever": recommend_chain_retriever,
   }
   | recommend_chain_prompt               # 하나로 만든 문서를 prompt에 넘겨주고
