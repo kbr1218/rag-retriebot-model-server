@@ -1,19 +1,9 @@
 # default.py
-from dotenv import load_dotenv
-import os
-
-from langchain_teddynote import logging
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.runnables import RunnablePassthrough
-
-# API KEY 정보 로드
-load_dotenv()
-GEMINI_API_KEY = os.getenv('API_KEY_GEMINI')
-
-# LangSmith 추적 설정
-logging.langsmith("lgdx_team2_routerchain")
+from config import GEMINI_API_KEY
 
 # default_chain (사용자의 의미없는 입력값에 대해 정해진 답변을 할 때)
 default_template = """

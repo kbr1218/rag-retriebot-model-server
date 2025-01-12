@@ -1,33 +1,12 @@
 # recommend.py
-from dotenv import load_dotenv
-import os
-
-from langchain_teddynote import logging
 from operator import itemgetter
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.vectorstores import FAISS
-
-
-# API KEY 정보 로드
-load_dotenv()
-GEMINI_API_KEY = os.getenv('API_KEY_GEMINI')
-OPENAI_API_KEY = os.getenv('API_KEY_OPENAI')
-
-# LangSmith 추적 설정
-logging.langsmith("lgdx_team2_routerchain")
-
-# 임베딩 모델 생성
-embeddings = HuggingFaceEmbeddings(model_name='ibm-granite/granite-embedding-278m-multilingual')
-
-# 벡터스토어 로드
-new_vector_store = FAISS.load_local("db\movies_vectorstore_faiss_1500",
-                                    embeddings=embeddings,
-                                    allow_dangerous_deserialization=True)
+from setup import FAISS_vectorstore
+from config import GEMINI_API_KEY, OPENAI_API_KEY
 
 # StructuredOutputParser 사용
 recommend_response_schemas = [
@@ -40,7 +19,7 @@ output_parser = StructuredOutputParser.from_response_schemas(recommend_response_
 recommend_chain_format_instructions = output_parser.get_format_instructions()
 
 # 검색기 생성
-recommend_chain_retriever = new_vector_store.as_retriever(
+recommend_chain_retriever = FAISS_vectorstore.as_retriever(
     search_type="mmr",   
     search_kwargs={"k": 20,              # 반환할 문서 수 (default: 4)
                    "fetch_k": 50,       # MMR 알고리즘에 전달할 문서 수
