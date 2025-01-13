@@ -13,7 +13,7 @@ class UserInput(BaseModel):
 
 @app.get('/')
 def load_root():
-  return {'hi': "server is running💭"}
+  return {'hi': "model server is running(port: 8000)💭"}
 
 # userid integer | string 나중에 변경
 # 일반대화 체인 (default chain)
