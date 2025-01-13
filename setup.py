@@ -2,10 +2,10 @@
 from langchain_teddynote import logging
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from config import VECTORSTORE_PATH
+from config import VECTORSTORE_PATH, LOGGING_NAME
 
 # langsmith 추적 설정
-logging.langsmith("lgdx_team2_routerchain")
+logging.langsmith(LOGGING_NAME)
 
 # 임베딩 모델 로드
 embeddings = HuggingFaceEmbeddings(model_name='ibm-granite/granite-embedding-278m-multilingual')
