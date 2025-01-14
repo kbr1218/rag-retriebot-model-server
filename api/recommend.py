@@ -1,5 +1,4 @@
 # recommend.py
-from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
