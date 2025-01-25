@@ -8,7 +8,7 @@ GEMINI_API_KEY = os.getenv('API_KEY_GEMINI')
 OPENAI_API_KEY = os.getenv('API_KEY_OPENAI')
 
 # FAISS 벡터스토어 path
-VECTORSTORE_PATH = "db\movies_vectorstore_faiss_1500"
+VECTORSTORE_PATH = "db\movies_FAISS_1630_0123"
 
 # LangSmith logging proj. name
 LOGGING_NAME = "lgdx_team2_routerchain"
