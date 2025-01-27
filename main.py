@@ -4,12 +4,17 @@ from pydantic import BaseModel
 from api.recommend import recommend_chain
 from setup import movies_vectorstore, views_vectorstore, embeddings
 from functions.user_utils import find_user_vectors
+from functions.add_views import add_view_vectors
 
 app = FastAPI()
 
 # 사용자 입력값 데이터 모델 정의
 class UserInput(BaseModel):
   user_input: str
+
+# 시청기록 저장용 데이터 모델 정의
+class WatchInput(BaseModel):
+  asset_id: str
 
 # 사용자 데이터를 저장할 변수 (시청기록)
 user_data_cache = {}
@@ -19,7 +24,7 @@ def load_root():
   return {'hi': "model server is running(port: 8000)💭"}
 
 
-# 사용자 ID 확인 및 시청기록 저장
+# 사용자 ID 확인 및 시청기록 검색
 @app.post('/{userid}/api/connect')
 def check_user_id(userid: str):
   try:
@@ -54,3 +59,20 @@ def load_recommend(userid: str, user_input: UserInput):
     return response
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"recommend chain error: {str(e)}")  # 500
+  
+
+# 시청기록 추가
+@app.post('/{user_id}/api/watch')
+def add_watch_record(user_id: str, watch_input: WatchInput):
+  asset_id = watch_input.asset_id
+
+  # 벡터스토어가 로드되지 않은 경우 예외 처리
+  if views_vectorstore is None:
+      raise HTTPException(status_code=500, detail="벡터스토어 로드 실패")
+  
+  try:
+    # 새로운 시청기록 추가
+    add_view_vectors(user_id, asset_id, views_vectorstore, embeddings)
+    return {"message": f"시청기록 추가 테스트 >> {user_id} - asset {asset_id}"}
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=f"시청기록 추가 실패: {str(e)}")
