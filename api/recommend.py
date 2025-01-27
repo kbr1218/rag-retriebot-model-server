@@ -5,7 +5,7 @@ from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
-from setup import FAISS_vectorstore
+from setup import movies_vectorstore
 from config import GEMINI_API_KEY, OPENAI_API_KEY
 
 # StructuredOutputParser 사용
@@ -43,7 +43,7 @@ def load_gpt():
 
 # 검색기 생성
 multiquery_chain_retriever = MultiQueryRetriever.from_llm(
-    retriever = FAISS_vectorstore.as_retriever(
+    retriever = movies_vectorstore.as_retriever(
         search_type="similarity",   
         search_kwargs={"k": 20,              # 반환할 문서 수 (default: 4)
                       #  "fetch_k": 50,        # MMR 알고리즘에 전달할 문서 수
