@@ -1,7 +1,6 @@
 # user_utils.py
 from typing import List, Tuple
 from fastapi import HTTPException
-from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from setup import embeddings, views_vectorstore
 

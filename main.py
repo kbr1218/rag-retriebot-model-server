@@ -1,8 +1,8 @@
 # main.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from api.recommend import recommend_chain
-from api.post_recommend import post_recommend_chain
+from chain.recommend import recommend_chain
+from chain.post_recommend import post_recommend_chain
 from setup import movies_vectorstore, views_vectorstore
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
