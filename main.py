@@ -3,7 +3,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from chain.recommend import recommend_chain
 from chain.post_recommend import post_recommend_chain
-from setup import movies_vectorstore, views_vectorstore
+from chain.wrapup import wrapup_chain
+from setup import views_vectorstore
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
@@ -46,9 +47,6 @@ def check_user_id(userid: str):
 @app.post('/{userid}/api/recommend')
 def load_recommend(userid: str, user_input: UserInput):
   print("recommend API 실행 시작 여기부터")
-  # 영화 벡터스토어가 없는 경우
-  if movies_vectorstore is None:
-    raise HTTPException(status_code=500, detail="Vectorstore for movies not loaded.")  # 500
 
   # 사용자 벡터 캐시 확인
   if userid not in user_data_cache:
@@ -70,11 +68,6 @@ def load_recommend(userid: str, user_input: UserInput):
     watched_movies = fetch_movie_details(watched_movies_asset_ids)
     print(f">>>>>>>>> {watched_movies_asset_ids}")
 
-    if not candidate_movies:
-      raise HTTPException(status_code=500, detail="추천 VOD 정보가 존재하지 않습니다.")
-    if not watched_movies:
-      raise HTTPException(status_code=500, detail="시청한 VOD 정보가 존재하지 않습니다.")
-
     # 사용자 시청기록을 사용하여 후보 VOD 중 5개 선정
     final_recommendation = post_recommend_chain.invoke(
       {"user_input": user_input.user_input,
@@ -83,7 +76,10 @@ def load_recommend(userid: str, user_input: UserInput):
       }
     )
 
-    return final_recommendation
+    # 선정된 5개의 영화들로 wrapup chain 실행
+    final_response = wrapup_chain.invoke({"final_recommendations": final_recommendation["final_recommendations"]})
+
+    return final_response
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"recommend API error: {str(e)}")  # 500
   

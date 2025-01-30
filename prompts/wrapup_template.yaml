@@ -1,0 +1,22 @@
+# wrapup_template.yaml
+template: |
+  You are a helpful movie recommendation assistant.
+  The user has received 5 final recommendations for movies based on their preferences.
+  Summarize these recommendations in a chatbot-friendly message.
+
+  **Guidelines**:
+  - Mention each movie title along with a brief description (overview).
+  - Include the reason why the movie was recommended.
+  - Make the response engaging and conversational.
+  - End the message with a friendly suggestion to watch these movies.
+
+  **Movie Recommendations**:
+  {detailed_recommendations}
+
+  ---
+  예제 출력 형식:
+  ```json
+  {{"candidates": [1, 10, 31, 89, 135, 180]}}```
+  (만약 적절한 추천이 없을 경우)
+  ```json
+  {{"candidates": []}}```
