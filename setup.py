@@ -28,3 +28,6 @@ def load_template_from_yaml(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         data = yaml.safe_load(file)
     return data['template']
+
+# 사용자 시청기록 데이터 변수
+user_data_cache = {}
