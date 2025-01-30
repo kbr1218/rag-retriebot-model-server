@@ -2,9 +2,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from api.recommend import recommend_chain
-from setup import movies_vectorstore, views_vectorstore, embeddings
+from api.post_recommend import post_recommend_chain
+from setup import movies_vectorstore, views_vectorstore
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
+from functions.fetch_movie_details import fetch_movie_details
 
 app = FastAPI()
 
@@ -17,7 +19,7 @@ class WatchInput(BaseModel):
   asset_id: str
   runtime: float
 
-# 사용자 데이터를 저장할 변수 (시청기록)
+# 사용자 시청기록 데이터 변수
 user_data_cache = {}
 
 @app.get('/')
@@ -30,7 +32,7 @@ def load_root():
 def check_user_id(userid: str):
   try:
     # 벡터스토어에서 user_id 검색
-    user_vectors = find_user_vectors(userid, views_vectorstore, embeddings)
+    user_vectors = find_user_vectors(userid)
     if user_vectors:
       # 사용자의 데이터를 전역 변수에 저장
       user_data_cache[userid] = user_vectors
@@ -40,11 +42,10 @@ def check_user_id(userid: str):
   except Exception as e:
       raise HTTPException(status_code=500, detail=f"Error checking user ID: {str(e)}")  # 500
 
-
-
 # 추천요청 체인
 @app.post('/{userid}/api/recommend')
 def load_recommend(userid: str, user_input: UserInput):
+  print("recommend API 실행 시작 여기부터")
   # 영화 벡터스토어가 없는 경우
   if movies_vectorstore is None:
     raise HTTPException(status_code=500, detail="Vectorstore for movies not loaded.")  # 500
@@ -53,13 +54,38 @@ def load_recommend(userid: str, user_input: UserInput):
   if userid not in user_data_cache:
     raise HTTPException(status_code=400, detail="사용자를 찾을 수 없음 (/api/connect 먼저 호출하쇼)")
 
-  # 추천 체인
   try:
-    user_vectors = user_data_cache[userid] 
+    # VOD 콘텐츠의 후보를 선정하는 체인 실행
     response = recommend_chain.invoke(user_input.user_input)
-    return response
+    candidate_asset_ids = response.get("candidates", [])
+
+    if not candidate_asset_ids:
+      raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
+
+    candidate_movies = fetch_movie_details(candidate_asset_ids)
+    print(f">>>>>>>>> {candidate_asset_ids}")
+
+    # 사용자가 시청한 VOD의 asset_id를 변수에 저장
+    watched_movies_asset_ids = [doc.metadata["asset_id"] for doc, _ in user_data_cache[userid]]
+    watched_movies = fetch_movie_details(watched_movies_asset_ids)
+    print(f">>>>>>>>> {watched_movies_asset_ids}")
+
+    if not candidate_movies:
+      raise HTTPException(status_code=500, detail="추천 VOD 정보가 존재하지 않습니다.")
+    if not watched_movies:
+      raise HTTPException(status_code=500, detail="시청한 VOD 정보가 존재하지 않습니다.")
+
+    # 사용자 시청기록을 사용하여 후보 VOD 중 5개 선정
+    final_recommendation = post_recommend_chain.invoke(
+      {"user_input": user_input.user_input,
+       "candidate_movies": candidate_movies,
+       "watched_movies": watched_movies
+      }
+    )
+
+    return final_recommendation
   except Exception as e:
-    raise HTTPException(status_code=500, detail = f"recommend chain error: {str(e)}")  # 500
+    raise HTTPException(status_code=500, detail = f"recommend API error: {str(e)}")  # 500
   
 
 # 시청기록 추가

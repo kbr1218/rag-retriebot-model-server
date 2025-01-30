@@ -11,7 +11,7 @@ from config import GEMINI_API_KEY, OPENAI_API_KEY
 # StructuredOutputParser 사용
 recommend_response_schemas = [
   ResponseSchema(name="candidates",
-                 description="사용자의 입력에 맞게 추천할 VOD 콘텐츠의 인덱스 리스트. 예: [1, 10, 31, 89, 135, 180]")
+                 description="사용자의 입력에 맞게 추천할 VOD 콘텐츠의 asset_id 리스트. 예: ['cjc|M4721638LFOL80567201', 'cjc|M4721638LFOL90477201', 'cjc|M4721649KQOL98147201']")
 ]
 output_parser = StructuredOutputParser.from_response_schemas(recommend_response_schemas)
 
@@ -44,7 +44,7 @@ def load_gpt():
 multiquery_chain_retriever = MultiQueryRetriever.from_llm(
     retriever = movies_vectorstore.as_retriever(
         search_type="similarity",   
-        search_kwargs={"k": 20,              # 반환할 문서 수 (default: 4)
+        search_kwargs={"k": 10,              # 반환할 문서 수 (default: 4)
                       #  "fetch_k": 50,        # MMR 알고리즘에 전달할 문서 수
                       #  "lambda_mult": 0.8,   # 결과 다양성 조절 (default: 0.5),
                        }

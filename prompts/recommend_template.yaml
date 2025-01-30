@@ -20,7 +20,7 @@ template: |
   ```json
   {{"candidates": []}}```
 
-  [사용자 입력과 사용자 입력값의 유형]:
+  [사용자 입력]:
   {user_input}
 
   [Context]:
