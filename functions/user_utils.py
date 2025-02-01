@@ -2,10 +2,7 @@
 from typing import List, Tuple
 from fastapi import HTTPException
 from langchain_core.documents import Document
-from langchain_community.vectorstores import Chroma
-from setup import embeddings
-from config import VECTORSTORE_PATH_VIEW_1, VECTORSTORE_PATH_VIEW_2
-
+from setup import load_views_vectorstore, views_vectorstore
 
 def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
   """
@@ -15,27 +12,16 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
       user_id (str): 검색할 사용자 ID.
   """
   # 시청기록 벡터스토어 먼저 불러오기
-  user_number = int(user_id.replace("user", ""))
-  print(f">>>>>> user_number: {user_number}")
+  global views_vectorstore
 
-  # 범위에 따라 벡터스토어 로드
-  if 1 <= user_number <= 17438:
-    views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_1,
-                               embedding_function=embeddings)
-    print(">>>>>> VectorStore for view #1 Loaded Successfully!")
-  elif 17439 <= user_number <= 41480:
-    views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_2,
-                               embedding_function=embeddings)
-    print(">>>>>> VectorStore for view #2 Loaded Successfully!")
-  else:
-    raise HTTPException(status_code=500, detail="vectorstore not loaded ({user_id}: 범위를 벗어난 userID)")
+  if views_vectorstore is None:
+    views_vectorstore = load_views_vectorstore(user_id)
   
   try:
-    total_docs = views_vectorstore._collection.count()
     # user_id에 해당하는 벡터 검색
-    user_vectors = views_vectorstore.similarity_search(query="",
-                                                       k=total_docs,
-                                                       filter={"user_id": user_id})
+    user_vectors = views_vectorstore.max_marginal_relevance_search(query="",  # 또는 similarity_search
+                                                                   k=100,
+                                                                   filter={"user_id": user_id})
     print(user_vectors)
     return user_vectors
   

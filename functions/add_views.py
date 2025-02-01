@@ -2,7 +2,7 @@
 import datetime
 from langchain_core.documents import Document
 from fastapi import HTTPException
-from setup import views_vectorstore, VECTORSTORE_PATH_VIEW_100
+from setup import load_views_vectorstore, views_vectorstore
 
 def add_view_to_vectorstore(user_id: str, asset_id: str, runtime: float):
     """
@@ -12,11 +12,12 @@ def add_view_to_vectorstore(user_id: str, asset_id: str, runtime: float):
         asset_id (str): VOD 콘텐츠의 ID
         runtime (float): VOD 콘텐츠의 런타임
     """
+    # 시청기록 전역변수 불러오기
+    global views_vectorstore
+    if views_vectorstore is None:
+        views_vectorstore = load_views_vectorstore(user_id)
+    
     try:
-        # 시청기록 벡터스토어가 None일 경우
-        if views_vectorstore is None:
-            raise HTTPException(status_code=500, detail="벡터스토어가 로드되지 않음!")
-
         # 현재 시간
         current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -40,7 +41,7 @@ def add_view_to_vectorstore(user_id: str, asset_id: str, runtime: float):
         # 벡터스토어에 추가
         views_vectorstore.add_documents([doc])
         # 변경사항 저장
-        views_vectorstore.save_local(VECTORSTORE_PATH_VIEW_100)
+        views_vectorstore.persist()
 
         return {"message": f"벡터스토어 저장 성공! ({user_id}, {asset_id})"}
 
