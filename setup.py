@@ -1,8 +1,8 @@
 # setup.py
 from langchain_teddynote import logging
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from config import VECTORSTORE_PATH_MOVIE, VECTORSTORE_PATH_VIEW_100, LOGGING_NAME
+from langchain_community.vectorstores import Chroma
+from config import LOGGING_NAME, VECTORSTORE_PATH_MOVIE
 import yaml
 
 # langsmith 추적 설정
@@ -13,11 +13,10 @@ embeddings = HuggingFaceEmbeddings(model_name='ibm-granite/granite-embedding-278
 
 # 벡터스토어 로드
 try:
-    movies_vectorstore = FAISS.load_local(VECTORSTORE_PATH_MOVIE, embeddings=embeddings, allow_dangerous_deserialization=True)
+    movies_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_MOVIE,
+                                embedding_function=embeddings)
     print(">>>>>> VectorStore for movies Loaded Successfully!")
 
-    views_vectorstore = FAISS.load_local(VECTORSTORE_PATH_VIEW_100, embeddings=embeddings, allow_dangerous_deserialization=True)
-    print(">>>>>> VectorStore for views Loaded Successfully!")
 except Exception as e:
     print(f"❌ Error Loading VectorStore: {e}")
     movies_vectorstore = None  # 벡터스토어 로딩 실패 시 예외 처리는 여기에

@@ -2,7 +2,10 @@
 from typing import List, Tuple
 from fastapi import HTTPException
 from langchain_core.documents import Document
-from setup import embeddings, views_vectorstore
+from langchain_community.vectorstores import Chroma
+from setup import embeddings
+from config import VECTORSTORE_PATH_VIEW_1, VECTORSTORE_PATH_VIEW_2
+
 
 def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
   """
@@ -10,20 +13,29 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
 
   Args:
       user_id (str): 검색할 사용자 ID.
-      
-  Returns:
-      List[Tuple[Document, float]]: 주어진 user_id에 해당하는 Document와 유사도 점수의 리스트
   """
-  if views_vectorstore is None:
-    raise HTTPException(status_code=500, detail="Vectorstore not loaded.")
+  # 시청기록 벡터스토어 먼저 불러오기
+  user_number = int(user_id.replace("user", ""))
+  print(f">>>>>> user_number: {user_number}")
+
+  # 범위에 따라 벡터스토어 로드
+  if 1 <= user_number <= 17438:
+    views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_1,
+                               embedding_function=embeddings)
+    print(">>>>>> VectorStore for view #1 Loaded Successfully!")
+  elif 17439 <= user_number <= 41480:
+    views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_2,
+                               embedding_function=embeddings)
+    print(">>>>>> VectorStore for view #2 Loaded Successfully!")
+  else:
+    raise HTTPException(status_code=500, detail="vectorstore not loaded ({user_id}: 범위를 벗어난 userID)")
   
   try:
+    total_docs = views_vectorstore._collection.count()
     # user_id에 해당하는 벡터 검색
-    query_embedding = embeddings.embed_query(user_id)
-    search_results = views_vectorstore.similarity_search_with_score_by_vector(query_embedding, k=views_vectorstore.index.ntotal)
-
-    # user_id와 일치하는 메타데이터를 가진 결과 필터링
-    user_vectors = [(doc, score) for doc, score in search_results if doc.metadata.get("user_id") == user_id]
+    user_vectors = views_vectorstore.similarity_search(query="",
+                                                       k=total_docs,
+                                                       filter={"user_id": user_id})
     print(user_vectors)
     return user_vectors
   
