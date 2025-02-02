@@ -10,14 +10,17 @@ from config import GEMINI_API_KEY, OPENAI_API_KEY
 
 # StructuredOutputParser 사용
 post_recommend_response_schemas = [
-  ResponseSchema(
+    ResponseSchema(
       name="final_recommendations",
-      description="최종적으로 선정된 5개의 VOD 콘텐츠의 asset_id와 추천 이유를 포함하는 객체의 리스트",
+      description="최종적으로 선정된 5개의 VOD 콘텐츠의 asset_id 리스트",
       type="list",
-      items=[
-          ResponseSchema(name="asset_id", description="VOD 콘텐츠의 ID"),
-          ResponseSchema(name="reason", description="해당 VOD를 추천하는 이유")
-      ])
+      items="string"
+    ),
+    ResponseSchema(
+        name="response",
+        description="추천된 영화를 설명하는 챗봇의 응답 메시지",
+        type="string"
+    )
 ]
 output_parser = StructuredOutputParser.from_response_schemas(post_recommend_response_schemas)
 

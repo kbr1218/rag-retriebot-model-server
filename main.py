@@ -3,11 +3,10 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from chain.recommend import recommend_chain
 from chain.post_recommend import post_recommend_chain
-from chain.wrapup import wrapup_chain
-from setup import views_vectorstore
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
+from functions.string_to_json import convert_string_to_json
 
 app = FastAPI()
 
@@ -20,7 +19,7 @@ class WatchInput(BaseModel):
   asset_id: str
   runtime: float
 
-# 사용자 시청기록 데이터 변수
+# 사용자 시청기록 저장을 위한 변수
 user_data_cache = {}
 
 @app.get('/')
@@ -28,47 +27,56 @@ def load_root():
   return {'hi': "model server is running(port: 8000)💭"}
 
 
-# 사용자 ID 확인 및 시청기록 검색
+# 사용자 ID 확인 및 시청기록 검색 API
 @app.post('/{userid}/api/connect')
 def check_user_id(userid: str):
+  print("\n------------- CONNECT API 실행 -------------")
   try:
     # 벡터스토어에서 user_id 검색
     user_vectors = find_user_vectors(userid)
+
     if user_vectors:
-      # 사용자의 데이터를 전역 변수에 저장
+      # 사용자 시청기록을 전역 변수(user_data_cache)에 저장
       user_data_cache[userid] = user_vectors
       return {"message": f"{userid}", "records_found": len(user_vectors)}        # 200
     else:
       raise HTTPException(status_code=404, detail="user not found")              # 404
+    
   except Exception as e:
       raise HTTPException(status_code=500, detail=f"Error checking user ID: {str(e)}")  # 500
+
 
 # 추천요청 체인
 @app.post('/{userid}/api/recommend')
 def load_recommend(userid: str, user_input: UserInput):
-  print("recommend API 실행 시작 여기부터")
+  print("\n------------- RECOMMEND API 실행 -------------")
 
-  # 사용자 벡터 캐시 확인
+  # 1) 사용자 시청기록이 저장되어 있는지 먼저 확인
   if userid not in user_data_cache:
-    raise HTTPException(status_code=400, detail="사용자를 찾을 수 없음 (/api/connect 먼저 호출하쇼)")
+    raise HTTPException(status_code=400, detail="사용자를 찾을 수 없음 (/api/connect 먼저 호출하쇼)")  # 400
 
   try:
-    # VOD 콘텐츠의 후보를 선정하는 체인 실행
+    # 2) VOD 콘텐츠의 후보를 선정하는 체인 실행
+    print(f">>>>>>>>> RECOMMEND CHAIN")
     response = recommend_chain.invoke(user_input.user_input)
     candidate_asset_ids = response.get("candidates", [])
+    print(f"\n>>>>>>>>> 후보로 선정된 콘텐츠의 asset IDs: \n{candidate_asset_ids}")
 
     if not candidate_asset_ids:
       raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
 
+    # 3) post_recommend chain의 prompt에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
     candidate_movies = fetch_movie_details(candidate_asset_ids)
-    print(f">>>>>>>>> {candidate_asset_ids}")
 
-    # 사용자가 시청한 VOD의 asset_id를 변수에 저장
-    watched_movies_asset_ids = [doc.metadata["asset_id"] for doc, _ in user_data_cache[userid]]
+    # 4) 사용자가 시청한 콘텐츠의 asset_id를 user_data_cache에서 가져와 변수에 저장
+    watched_movies_asset_ids = [doc.metadata["asset_id"] for doc in user_data_cache[userid]]
+    print(f"\n>>>>>>>>> 사용자가 시청한 콘텐츠의 asset IDs: \n{watched_movies_asset_ids}")
+
+    # 5) post_recommend chain의 prompt에 사용자가 시청한 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
     watched_movies = fetch_movie_details(watched_movies_asset_ids)
-    print(f">>>>>>>>> {watched_movies_asset_ids}")
 
-    # 사용자 시청기록을 사용하여 후보 VOD 중 5개 선정
+    # 6) 사용자에게 추천할 콘텐츠 5개를 선별하는 체인 실행
+    print(f"\n>>>>>>>>> POST RECOMMEND CHAIN")
     final_recommendation = post_recommend_chain.invoke(
       {"user_input": user_input.user_input,
        "candidate_movies": candidate_movies,
@@ -76,10 +84,20 @@ def load_recommend(userid: str, user_input: UserInput):
       }
     )
 
-    # 선정된 5개의 영화들로 wrapup chain 실행
-    final_response = wrapup_chain.invoke({"final_recommendations": final_recommendation["final_recommendations"]})
+    # 7) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
+    raw_results = fetch_movie_details(final_recommendation["final_recommendations"])
+    print(f"\n>>>>>>>>> ‼️raw_results HERE‼️: \n{raw_results}")
 
-    return final_response
+    # 8) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
+    results = {
+      asset_id: convert_string_to_json(asset_id, movie_data["page_content"])
+      for asset_id, movie_data in raw_results["movie_details"].items()
+    }
+
+    return {
+      "movies": results,
+      "response": final_recommendation["response"]
+    }
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"recommend API error: {str(e)}")  # 500
   
@@ -87,11 +105,9 @@ def load_recommend(userid: str, user_input: UserInput):
 # 시청기록 추가
 @app.post('/{user_id}/api/watch')
 def add_watch_record(user_id: str, watch_input: WatchInput):
+  print(f"\n------------- WATCH API 실행 -------------")
   asset_id = watch_input.asset_id
   runtime = watch_input.runtime
-
-  if views_vectorstore is None:
-      raise HTTPException(status_code=500, detail="Vectorstore not loaded.")
 
   try:
     # 새로운 시청기록 추가
