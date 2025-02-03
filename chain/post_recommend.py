@@ -48,7 +48,7 @@ def load_gemini():
 
 def load_gpt():
     model = ChatOpenAI(
-        model_name='gpt-4o-2024-08-06',    #'gpt-4o-mini-2024-07-18',
+        model_name='gpt-4o-mini-2024-07-18',  #'gpt-4o-2024-08-06',    #'gpt-4o-mini-2024-07-18',
         temperature=0,
         max_tokens=3000,
         api_key=OPENAI_API_KEY
@@ -56,7 +56,7 @@ def load_gpt():
     print(">>>>>>> GPT loaded from post-recommend chain...")
     return model
 
-post_recommend_chain_llm = load_gpt()
+post_recommend_chain_llm = load_gemini()
 
 
 # langchain 체인 구성
