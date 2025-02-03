@@ -65,17 +65,21 @@ def load_recommend(userid: str, user_input: UserInput):
     if not candidate_asset_ids:
       raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
 
-    # 3) post_recommend chain의 prompt에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
-    candidate_movies = fetch_movie_details(candidate_asset_ids)
-
-    # 4) 사용자가 시청한 콘텐츠의 asset_id를 user_data_cache에서 가져와 변수에 저장
+    # 3) 사용자가 시청한 콘텐츠의 asset_id를 user_data_cache에서 가져와 변수에 저장
     watched_movies_asset_ids = [doc.metadata["asset_id"] for doc in user_data_cache[userid]]
     print(f"\n>>>>>>>>> 사용자가 시청한 콘텐츠의 asset IDs: \n{watched_movies_asset_ids}")
 
-    # 5) post_recommend chain의 prompt에 사용자가 시청한 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
+    # 4) VOD 콘텐츠 후보 중에서 사용자가 시청한 콘텐츠가 있다면 제외
+    watched_set = set(watched_movies_asset_ids)
+    candidate_asset_ids = [asset_id for asset_id in candidate_asset_ids if asset_id not in watched_set]
+
+    # 5) post_recommend chain의 prompt에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
+    candidate_movies = fetch_movie_details(candidate_asset_ids)
+
+    # 6) post_recommend chain의 prompt에 사용자가 시청한 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
     watched_movies = fetch_movie_details(watched_movies_asset_ids)
 
-    # 6) 사용자에게 추천할 콘텐츠 5개를 선별하는 체인 실행
+    # 7) 사용자에게 추천할 콘텐츠 5개를 선별하는 체인 실행
     print(f"\n>>>>>>>>> POST RECOMMEND CHAIN")
     final_recommendation = post_recommend_chain.invoke(
       {"user_input": user_input.user_input,
@@ -86,7 +90,7 @@ def load_recommend(userid: str, user_input: UserInput):
 
     # 7) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
     raw_results = fetch_movie_details(final_recommendation["final_recommendations"])
-    print(f"\n>>>>>>>>> ‼️raw_results HERE‼️: \n{raw_results}")
+    print(f"\n>>>>>>>>> raw_results HERE: \n{raw_results}")
 
     # 8) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
     results = {
