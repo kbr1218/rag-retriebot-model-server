@@ -35,7 +35,7 @@ def convert_string_to_json(asset_id: str, page_content: str):
         cleaned_string = re.sub(r'(?<=:\s)None\b', "null", cleaned_string)
 
         # JSON 변환
-        json_data = json.loads(cleaned_string)
+        json_data = json.loads(page_content)
         
         # float 값을 int로 변환 (e.g. release_year: 2023.0 >> 2023)
         for key, value in json_data.items():
