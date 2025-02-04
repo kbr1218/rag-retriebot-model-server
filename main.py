@@ -101,7 +101,7 @@ def load_recommend(userid: str, user_input: UserInput):
 
     return {
       "movies": results,
-      "response": final_recommendation["response"]
+      "answer": final_recommendation["response"]
     }
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"recommend API error: {str(e)}")  # 500
