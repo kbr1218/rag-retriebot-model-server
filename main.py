@@ -6,7 +6,7 @@ from chain.post_recommend import post_recommend_chain
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
-# from functions.string_to_json import convert_string_to_json
+from functions.convert_to_json import convert_to_json
 import json
 
 app = FastAPI()
@@ -95,7 +95,7 @@ def load_recommend(userid: str, user_input: UserInput):
 
     # 8) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
     results = {
-      str(index + 1): json.loads(movie_data["page_content"])
+      str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
       for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
     }
 
