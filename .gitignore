@@ -8,7 +8,14 @@
 .idea/
 .vscode/
 */cache/*
+/data/
+/etc/
+db/
 
+### vectorstore ###
+*/movies_vectorstore_chroma_1630/
+*/new_movies_vectorstore_chroma_1630/
+*/views_vectorstore_chroma_first/
 
 # templates ---------------------------------------
 ### Byte-compiled / optimized / DLL files ###
