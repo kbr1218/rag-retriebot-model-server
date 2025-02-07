@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from chain.recommend import recommend_chain
 from chain.post_recommend import post_recommend_chain
+from chain.search import search_chain
 from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
@@ -105,7 +106,29 @@ def load_recommend(userid: str, user_input: UserInput):
     }
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"recommend API error: {str(e)}")  # 500
-  
+
+@app.post('/{userid}/api/search')
+def load_search(userid: str, user_input: UserInput):
+  print(f"\n------------- SEARCH API 실행 -------------")
+  # 사용자 벡터 캐시 확인
+  if userid not in user_data_cache:
+    raise HTTPException(status_code=400, detail="사용자를 찾을 수 없음 (/api/connect 먼저 호출하쇼)")
+  try:
+    response = search_chain.invoke(user_input.user_input)
+    raw_results = fetch_movie_details(response["asset_id"])
+    print(f"\n>>>>>>>>> raw_results HERE: \n{raw_results}")
+
+    results = {
+      str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
+      for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
+    }
+    return {
+      "movies": results,
+      "answer": response["reason"]
+    }
+  except Exception as e:
+    raise HTTPException(status_code=500, detail = f"search API error: {str(e)}")  # 500
+
 
 # 시청기록 추가
 @app.post('/{user_id}/api/watch')
