@@ -1,14 +1,13 @@
 from langchain.chains.query_constructor.base import AttributeInfo, StructuredQueryOutputParser, get_query_constructor_prompt
 from langchain.retrievers.self_query.base import SelfQueryRetriever
-from langchain.retrievers.self_query.chroma import ChromaTranslator
+from langchain_community.query_constructors.chroma import ChromaTranslator
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
 from setup import movies_vectorstore
 from config import OPENAI_API_KEY, GEMINI_API_KEY
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 metadata_field_info = [
     AttributeInfo(
@@ -104,7 +103,7 @@ def load_gemini():
         temperature=0.3,
         api_key=GEMINI_API_KEY
     )
-    print(">>>>>>> Gemini loaded from recommend chain...")
+    print(">>>>>>> Gemini loaded from search chain...")
     return model
 
 def load_gpt():
@@ -113,7 +112,7 @@ def load_gpt():
         temperature=0,
         api_key=OPENAI_API_KEY
     )
-    print(">>>>>>> GPT loaded from recommend chain...")
+    print(">>>>>>> GPT loaded from search chain...")
     return model
 
 llm = load_gemini()
