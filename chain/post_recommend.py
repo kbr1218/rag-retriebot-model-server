@@ -63,7 +63,8 @@ post_recommend_chain_llm = load_gemini()
 post_recommend_chain = (
   {"user_input": RunnablePassthrough(),
    "candidate_movies": RunnablePassthrough(),
-   "watched_movies": RunnablePassthrough()
+   "watched_movies": RunnablePassthrough(),
+   "user_preference": RunnablePassthrough()
   }
   | post_recommend_prompt
   | post_recommend_chain_llm

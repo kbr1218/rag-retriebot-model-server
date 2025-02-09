@@ -10,6 +10,7 @@ from functions.fetch_movie_details import fetch_movie_details
 from functions.convert_to_json import convert_to_json
 from functions.filter_watched_content import filter_watched_contents
 import json
+import ast
 
 app = FastAPI()
 
@@ -67,7 +68,6 @@ def load_recommend(userid: str, user_input: UserInput):
 
     # 3) 후보 VOD 중 사용자가 시청한 콘텐츠를 제외하는 필터링 수행
     unwatched_candidates = filter_watched_contents(userid, candidate_asset_ids)
-    print(f">>>>>>>>> 사용자가 시청한 콘텐츠를 제외한 asset IDs: \n{unwatched_candidates}")
     print(f">>>>>>>>> 사용자가 시청한 콘텐츠를 제외한 콘텐츠 개수: {len(unwatched_candidates)}")
 
     if not unwatched_candidates:
@@ -76,20 +76,33 @@ def load_recommend(userid: str, user_input: UserInput):
     # 4) post_recommend chain에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
     candidate_movies = fetch_movie_details(unwatched_candidates)
 
+    # 5) 사용자가 시청한 콘텐츠의 asset_id로 영화 정보를 가져오기
+    watched_movies_asset_ids= [doc.metadata["asset_id"] for doc in user_data_cache[userid]]
+    watched_movies = fetch_movie_details(watched_movies_asset_ids)
+
+    # 6) post_recommend chain의 prompt에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
+    watched_movies_page_content = [doc.page_content for doc in user_data_cache[userid]]
+    user_preference = [
+        f"asset_id: {movie_data['asset_id']}, use_tms/runtime: {movie_data['use_tms/runtime']}, datetime: {movie_data['datetime']}"
+        for movie in watched_movies_page_content
+        for movie_data in [ast.literal_eval(movie)]  # Safely convert string to dictionary
+    ]
+
     # 7) 사용자에게 추천할 콘텐츠 5개를 선별하는 체인 실행
     print(f"\n>>>>>>>>> POST RECOMMEND CHAIN")
     final_recommendation = post_recommend_chain.invoke(
       {"user_input": user_input.user_input,
        "candidate_movies": candidate_movies,
-       "watched_movies": user_data_cache
+       "watched_movies": watched_movies,
+       "user_preference": watched_movies_page_content
       }
     )
 
-    # 7) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
+    # 8) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
     print(f">>>>>>>>> 최종 추천 VOD 개수: {len(final_recommendation['final_recommendations'])}")
     raw_results = fetch_movie_details(final_recommendation["final_recommendations"])
 
-    # 8) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
+    # 9) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
     results = {
       str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
       for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
