@@ -8,6 +8,7 @@ from functions.user_utils import find_user_vectors
 from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
 from functions.convert_to_json import convert_to_json
+from functions.filter_watched_content import filter_watched_contents
 import json
 
 app = FastAPI()
@@ -34,7 +35,7 @@ def load_root():
 def check_user_id(userid: str):
   print("\n------------- CONNECT API 실행 -------------")
   try:
-    # 벡터스토어에서 user_id 검색
+    # 벡터스토어에서 user_id 검색하여 최근 시청한 VOD를 최대 10개까지 가져옴
     user_vectors = find_user_vectors(userid)
 
     if user_vectors:
@@ -62,37 +63,31 @@ def load_recommend(userid: str, user_input: UserInput):
     print(f">>>>>>>>> RECOMMEND CHAIN")
     response = recommend_chain.invoke(user_input.user_input)
     candidate_asset_ids = response.get("candidates", [])
-    print(f"\n>>>>>>>>> 후보로 선정된 콘텐츠의 asset IDs: \n{candidate_asset_ids}")
+    print(f">>>>>>>>> 후보로 선정된 콘텐츠 개수: {len(candidate_asset_ids)}")
 
-    if not candidate_asset_ids:
+    # 3) 후보 VOD 중 사용자가 시청한 콘텐츠를 제외하는 필터링 수행
+    unwatched_candidates = filter_watched_contents(userid, candidate_asset_ids)
+    print(f">>>>>>>>> 사용자가 시청한 콘텐츠를 제외한 asset IDs: \n{unwatched_candidates}")
+    print(f">>>>>>>>> 사용자가 시청한 콘텐츠를 제외한 콘텐츠 개수: {len(unwatched_candidates)}")
+
+    if not unwatched_candidates:
       raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
 
-    # 3) 사용자가 시청한 콘텐츠의 asset_id를 user_data_cache에서 가져와 변수에 저장
-    watched_movies_asset_ids = [doc.metadata["asset_id"] for doc in user_data_cache[userid]]
-    print(f"\n>>>>>>>>> 사용자가 시청한 콘텐츠의 asset IDs: \n{watched_movies_asset_ids}")
-
-    # 4) VOD 콘텐츠 후보 중에서 사용자가 시청한 콘텐츠가 있다면 제외
-    watched_set = set(watched_movies_asset_ids)
-    candidate_asset_ids = [asset_id for asset_id in candidate_asset_ids if asset_id not in watched_set]
-
-    # 5) post_recommend chain의 prompt에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
-    candidate_movies = fetch_movie_details(candidate_asset_ids)
-
-    # 6) post_recommend chain의 prompt에 사용자가 시청한 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
-    watched_movies = fetch_movie_details(watched_movies_asset_ids)
+    # 4) post_recommend chain에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
+    candidate_movies = fetch_movie_details(unwatched_candidates)
 
     # 7) 사용자에게 추천할 콘텐츠 5개를 선별하는 체인 실행
     print(f"\n>>>>>>>>> POST RECOMMEND CHAIN")
     final_recommendation = post_recommend_chain.invoke(
       {"user_input": user_input.user_input,
        "candidate_movies": candidate_movies,
-       "watched_movies": watched_movies
+       "watched_movies": user_data_cache
       }
     )
 
     # 7) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
+    print(f">>>>>>>>> 최종 추천 VOD 개수: {len(final_recommendation['final_recommendations'])}")
     raw_results = fetch_movie_details(final_recommendation["final_recommendations"])
-    print(f"\n>>>>>>>>> raw_results HERE: \n{raw_results}")
 
     # 8) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
     results = {

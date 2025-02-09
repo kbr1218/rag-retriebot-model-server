@@ -23,13 +23,9 @@ try:
 except Exception as e:
     print(f"❌ Error Loading VectorStore: {e}")
     movies_vectorstore = None  # 벡터스토어 로딩 실패 시 예외 처리는 여기에
-    views_vectorstore = None
 
 # 시청기록 벡터스토어 로드하는 함수
 def load_views_vectorstore(user_id: str):
-    """
-    사용자의 user_id에 맞는 views_vectorstore를 로드하여 전역 변수에 저장
-    """
     global views_vectorstore
     user_number = int(user_id.replace("user", ""))
 

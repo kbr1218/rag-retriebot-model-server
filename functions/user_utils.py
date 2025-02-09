@@ -10,6 +10,9 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
 
   Args:
       user_id (str): 검색할 사용자 ID.
+
+  Returns:
+      List[Tuple[Document, float]]: 최근 10개의 시청 기록 벡터.
   """
   # 시청기록 벡터스토어 먼저 불러오기
   global views_vectorstore
@@ -19,10 +22,10 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
   
   try:
     # user_id에 해당하는 벡터 검색
-    user_vectors = views_vectorstore.max_marginal_relevance_search(query="",  # 또는 similarity_search
-                                                                   k=100,
-                                                                   filter={"user_id": user_id})
-    print(user_vectors)
+    user_vectors = views_vectorstore.similarity_search(query="",  # 또는  max_marginal_relevance_search
+                                                        k=10,
+                                                        filter={"user_id": user_id})
+    print(f"\n>>>>>>>>> 사용자의 시청기록: {user_vectors}")
     return user_vectors
   
   except Exception as e:

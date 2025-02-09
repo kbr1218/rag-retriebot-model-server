@@ -2,7 +2,7 @@
 import datetime
 from langchain_core.documents import Document
 from fastapi import HTTPException
-from setup import load_views_vectorstore, views_vectorstore
+from setup import load_views_vectorstore
 
 def add_view_to_vectorstore(user_id: str, asset_id: str, runtime: float):
     """
