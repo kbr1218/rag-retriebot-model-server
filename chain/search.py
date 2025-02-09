@@ -1,3 +1,4 @@
+# search.py
 from langchain.chains.query_constructor.base import AttributeInfo, StructuredQueryOutputParser, get_query_constructor_prompt
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain_community.query_constructors.chroma import ChromaTranslator
@@ -8,6 +9,7 @@ from setup import movies_vectorstore
 from config import OPENAI_API_KEY, GEMINI_API_KEY
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.chat_models import ChatOpenAI
+from setup import load_template_from_yaml
 
 metadata_field_info = [
     AttributeInfo(
@@ -161,53 +163,6 @@ retriever = SelfQueryRetriever(
     structured_query_translator=CustomChromaTranslator(),  # 쿼리 변환기
 )
 
-
-search_template = """
-You are a movie information search chatbot.
-You must only answer based on the given context.
-Do not generate answers that are not directly supported by the context.
-사용자가 영화 정보에 대해 검색하고 있습니다.
-다음 사용자 질문과 **가장 정확한 영화정보**를 json형식으로 답변합니다.
-
-**중요**:
-- 추천 리스트에는 반드시 **[Context]**에서 제공된 문서만 포함해야 합니다.
-- **[Context]**에 없는 문서를 절대 생성하거나 포함하지 마세요.
-- **[Context]**에 적절한 추천이 없을 경우, 빈 리스트를 반환하세요.
-
----
-
-[사용자 입력]:
-{user_input}
-
-[Context]:
-{Self_Query_Retriever}
-
-Returns only a JSON-formatted list of **1 to up to 5 asset_ids**.
-reason 부분은 질문에 맞는 VOD를 들고 온 것이니 해당 VOD를 통해 질문에 대한 답변을 생성합니다. 
-답변은 한국어이면서 존댓말, 구어체로 반환합니다. 예를 들어 영화 '괴물'의 러닝타임은 119분이에요.
-asset_id가 존재하면 reason도 공존해야합니다.
-예제 출력 형식:
-```json
-{{'asset_id': ['cjc|M0367473LSG227885401', 'cjc|M4792152LSGK92492501'],
-  'reason':  ["영화 '겨울왕국'은 2013년에 개봉한 가족, 모험, 애니메이션, 판타지 장르의 영화로, 엘사와 안나 자매의 이야기를 다루고 있어요. 엘사는 모든 것을 얼려버리는 신비로운 힘을 가지고 있으며, 이 힘을 두려워해 왕국을 떠나게 되죠. 안나는 언니 엘사를 찾아 나서고, 크리스토프와 함께 얼어붙은 왕국을 구하기 위해 모험을 떠나요. 러닝타임은 108분이에요.",
-               "영화 '겨울왕국2'는 2019년에 개봉한 가족, 모험, 애니메이션, 코미디, 판타지 장르의 영화로, 아렌델 왕국에 새로운 위기가 찾아오면서 엘사와 안나가 과거의 진실을 찾기 위해 모험을 떠나는 이야기를 다루고 있어요. 엘사는 자신의 힘의 비밀을 찾기 위해 크리스토프, 올라프와 함께 떠나게 되죠. 러닝타임은 103분이에요."]}}
-```
-한개의 asset_id일 때,
-```json
-{{'asset_id': ['cjc|M0367473LSG227885401'],
-  'reason':  ["영화 '겨울왕국'은 2013년에 개봉한 가족, 모험, 애니메이션, 판타지 장르의 영화로, 엘사와 안나 자매의 이야기를 다루고 있어요. 엘사는 모든 것을 얼려버리는 신비로운 힘을 가지고 있으며, 이 힘을 두려워해 왕국을 떠나게 되죠. 안나는 언니 엘사를 찾아 나서고, 크리스토프와 함께 얼어붙은 왕국을 구하기 위해 모험을 떠나요. 러닝타임은 108분이에요."]}}
-```
-asset_id가 없을 때,
-```json
-{{'asset_id': [],
-  'reason':  []}}
-```
-
-{search_format_instructions}
-
-"""
-
-
 search_response_schemas = [
   ResponseSchema(
       name="asset_id",
@@ -225,7 +180,8 @@ output_parser = StructuredOutputParser.from_response_schemas(search_response_sch
 # 출력 지시사항 파싱
 search_format_instructions = output_parser.get_format_instructions()
 
-# template 불러오기기
+# template 불러오기
+search_template = load_template_from_yaml("./prompts/search_template.yaml")
 search_prompt = ChatPromptTemplate.from_template(
     search_template,
     partial_variables={'search_format_instructions': search_format_instructions}
