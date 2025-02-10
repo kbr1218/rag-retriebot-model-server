@@ -2,7 +2,7 @@
 from typing import List, Tuple
 from fastapi import HTTPException
 from langchain_core.documents import Document
-from setup import load_views_vectorstore, views_vectorstore
+import setup
 
 def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
   """
@@ -15,14 +15,13 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
       List[Tuple[Document, float]]: 최근 10개의 시청 기록 벡터.
   """
   # 시청기록 벡터스토어 먼저 불러오기
-  global views_vectorstore
 
-  if views_vectorstore is None:
-    views_vectorstore = load_views_vectorstore(user_id)
+  if setup.views_vectorstore is None:
+    setup.views_vectorstore = setup.load_views_vectorstore(user_id)
   
   try:
     # user_id에 해당하는 벡터 검색
-    user_vectors = views_vectorstore.similarity_search(query="",  # 또는  max_marginal_relevance_search
+    user_vectors = setup.views_vectorstore.similarity_search(query="",  # 또는  max_marginal_relevance_search
                                                         k=10,
                                                         filter={"user_id": user_id})
     print(f"\n>>>>>>>>> 사용자의 시청기록: {user_vectors}")

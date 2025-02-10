@@ -26,7 +26,6 @@ except Exception as e:
 
 # 시청기록 벡터스토어 로드하는 함수
 def load_views_vectorstore(user_id: str):
-    global views_vectorstore
     user_number = int(user_id.replace("user", ""))
 
     if 1 <= user_number <= 17438:
