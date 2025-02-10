@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from setup import movies_vectorstore, load_template_from_yaml
-from config import GEMINI_API_KEY, OPENAI_API_KEY
+from config import GEMINI_API_KEY
 
 # StructuredOutputParser 사용
 recommend_response_schemas = [
@@ -34,15 +34,15 @@ def load_gemini():
     print(">>>>>>> Gemini loaded from recommend chain...")
     return model
 
-def load_gpt():
-    model = ChatOpenAI(
-        model_name='gpt-4o-mini-2024-07-18',
-        temperature=0,
-        max_tokens=3000,
-        api_key=OPENAI_API_KEY
-    )
-    print(">>>>>>> GPT loaded from recommend chain...")
-    return model
+# def load_gpt():
+#     model = ChatOpenAI(
+#         model_name='gpt-4o-mini-2024-07-18',
+#         temperature=0,
+#         max_tokens=3000,
+#         api_key=OPENAI_API_KEY
+#     )
+#     print(">>>>>>> GPT loaded from recommend chain...")
+#     return model
 
 # 검색기 생성
 multiquery_chain_retriever = MultiQueryRetriever.from_llm(

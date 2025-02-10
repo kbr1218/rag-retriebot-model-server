@@ -5,7 +5,7 @@ from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from setup import load_template_from_yaml
-from config import GEMINI_API_KEY, OPENAI_API_KEY
+from config import GEMINI_API_KEY
 
 
 # StructuredOutputParser 사용
@@ -46,15 +46,15 @@ def load_gemini():
     print(">>>>>>> Gemini loaded from post-recommend chain...")
     return model
 
-def load_gpt():
-    model = ChatOpenAI(
-        model_name='gpt-4o-mini-2024-07-18',  #'gpt-4o-2024-08-06',    #'gpt-4o-mini-2024-07-18',
-        temperature=0,
-        max_tokens=3000,
-        api_key=OPENAI_API_KEY
-    )
-    print(">>>>>>> GPT loaded from post-recommend chain...")
-    return model
+# def load_gpt():
+#     model = ChatOpenAI(
+#         model_name='gpt-4o-mini-2024-07-18',  #'gpt-4o-2024-08-06',    #'gpt-4o-mini-2024-07-18',
+#         temperature=0,
+#         max_tokens=3000,
+#         api_key=OPENAI_API_KEY
+#     )
+#     print(">>>>>>> GPT loaded from post-recommend chain...")
+#     return model
 
 post_recommend_chain_llm = load_gemini()
 
