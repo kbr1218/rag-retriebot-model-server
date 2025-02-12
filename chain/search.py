@@ -170,9 +170,9 @@ search_response_schemas = [
       type="list"
       ),
   ResponseSchema(
-      name="reason",
-      description="VOD를 통해 질문에 대한 답변 리스트, 한국어이면서 존댓말 구어체로 답변합니다. asset_id의 순서에 알맞게 리스트를 생성합니다. 최대 5개의 asset_id만 포함되기 때문에 reason도 최대 5개의 reason만 포함합니다.",
-      type="list"
+      name="answer",
+      description="VOD를 통해 질문에 대한 답변, 한국어이면서 존댓말 구어체로 답변합니다. 최대 5개의 asset_id만 포함되기 때문에 reason도 최대 5개의 reason만 포함합니다.",
+      type="string"
       )
 ]
 

@@ -132,7 +132,7 @@ def load_search(userid: str, user_input: UserInput):
     }
     return {
       "movies": results,
-      "answer": response["reason"]
+      "answer": response["answer"]
     }
   except Exception as e:
     raise HTTPException(status_code=500, detail = f"search API error: {str(e)}")  # 500
