@@ -38,6 +38,7 @@ template: |
     ```
     **영화 제목**  
     한-두 문장의 짧은 설명
+    가독성을 높이기 위해 문단이 바뀔 때마다 한 줄 띄기를 해주세요.
     ```
 
   - If a recommended movie is similar to a highly preferred watched movie (high `use_tms/runtime`), explain:  
