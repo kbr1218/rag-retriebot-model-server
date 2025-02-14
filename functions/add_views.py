@@ -83,8 +83,7 @@ def add_view_to_vectorstore(user_id: str, asset_id: str):
             # 변경사항 저장
             setup.views_vectorstore.persist()
 
-            return {"answer": """제가 잘 추천했군요!  \n
-                    언제든 또 보고 싶은 영화가 있으면 말해주세요! 더 좋은 영화를 물어올게요!🍿"""}
+            return {"answer": "제가 잘 추천했군요🍿!  \n  언제든 또 보고 싶은 영화가 있으면 말해주세요! 더 좋은 영화를 물어올게요!🦴"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"벡터스토어 저장 실패: {str(e)}")
