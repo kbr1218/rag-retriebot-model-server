@@ -21,7 +21,6 @@ class UserInput(BaseModel):
 # 시청기록 저장용 데이터 모델 정의
 class WatchInput(BaseModel):
   asset_id: str
-  runtime: float
 
 # 사용자 시청기록 저장을 위한 변수
 user_data_cache = {}
@@ -143,11 +142,9 @@ def load_search(userid: str, user_input: UserInput):
 def add_watch_record(user_id: str, watch_input: WatchInput):
   print(f"\n------------- WATCH API 실행 -------------")
   asset_id = watch_input.asset_id
-  runtime = watch_input.runtime
 
   try:
     # 새로운 시청기록 추가
-    add_view_to_vectorstore(user_id, asset_id, runtime)
-    return {"message": f"시청기록 추가 완료 >> {user_id} - {asset_id}"}
+    return add_view_to_vectorstore(user_id, asset_id)
   except Exception as e:
     raise HTTPException(status_code=500, detail=f"시청기록 추가 실패: {str(e)}")
