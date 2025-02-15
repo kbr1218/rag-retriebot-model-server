@@ -117,7 +117,7 @@ def load_gpt():
     print(">>>>>>> GPT loaded from search chain...")
     return model
 
-llm = load_gemini()
+llm = load_gpt()
 
 prompt = get_query_constructor_prompt(
     document_contents = document_content_description,  # 문서 내용 설명
