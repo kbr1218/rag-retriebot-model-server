@@ -21,9 +21,21 @@ def find_user_vectors(user_id: str) -> List[Tuple[Document, float]]:
   
   try:
     # user_id에 해당하는 벡터 검색
-    user_vectors = setup.views_vectorstore.similarity_search(query="",  # 또는  max_marginal_relevance_search
-                                                        k=10,
-                                                        filter={"user_id": user_id})
+    user_vectors = setup.views_vectorstore.similarity_search(
+      query="",  # 또는  max_marginal_relevance_search
+      k=20,
+      filter={"$and": [
+        {"user_id": {"$eq": user_id}}, 
+        {"use_tms/runtime": {"$gte": 1}}
+      ]}
+    )
+
+    if not user_vectors:
+      user_vectors = setup.views_vectorstore.similarity_search(
+        query="",
+        k=20,
+        filter={"user_id": {"$eq": user_id}}
+      )
     print(f"\n>>>>>>>>> 사용자의 시청기록: {user_vectors}")
     return user_vectors
   
