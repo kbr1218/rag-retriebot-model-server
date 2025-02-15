@@ -60,7 +60,7 @@ multiquery_chain_retriever = MultiQueryRetriever.from_llm(
 recommend_template = load_template_from_yaml("./prompts/recommend_template.yaml")
 recommend_chain_prompt = ChatPromptTemplate.from_template(recommend_template,
                                                           partial_variables={'recommend_chain_format_instructions': recommend_chain_format_instructions})
-recommend_chain_llm = load_gemini()
+recommend_chain_llm = load_gpt()
 
 # langchain 체인 구성
 recommend_chain = (

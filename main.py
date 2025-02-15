@@ -69,11 +69,11 @@ def load_recommend(userid: str, user_input: UserInput):
     unwatched_candidates = filter_watched_contents(userid, candidate_asset_ids)
     print(f">>>>>>>>> 사용자가 시청한 콘텐츠를 제외한 콘텐츠 개수: {len(unwatched_candidates)}")
 
-    if not unwatched_candidates:
-      raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
+    # if not unwatched_candidates:
+    #   raise HTTPException(status_code=500, detail="추천할 VOD 후보가 없습니다.")
 
     # 4) post_recommend chain에 후보 콘텐츠 정보를 넣을 수 있도록 fetch_movie_details 함수 실행
-    candidate_movies = fetch_movie_details(unwatched_candidates)
+    candidate_movies = fetch_movie_details(unwatched_candidates) if unwatched_candidates else []
 
     # 5) 사용자가 시청한 콘텐츠의 asset_id로 영화 정보를 가져오기
     watched_movies_asset_ids= [doc.metadata["asset_id"] for doc in user_data_cache[userid]]
@@ -93,7 +93,7 @@ def load_recommend(userid: str, user_input: UserInput):
       {"user_input": user_input.user_input,
        "candidate_movies": candidate_movies,
        "watched_movies": watched_movies,
-       "user_preference": watched_movies_page_content
+       "user_preference": user_preference
       }
     )
 

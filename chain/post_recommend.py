@@ -56,7 +56,7 @@ def load_gpt():
     print(">>>>>>> GPT loaded from post-recommend chain...")
     return model
 
-post_recommend_chain_llm = load_gemini()
+post_recommend_chain_llm = load_gpt()
 
 
 # langchain 체인 구성
