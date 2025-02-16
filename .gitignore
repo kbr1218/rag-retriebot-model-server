@@ -4,6 +4,7 @@
 ### data ###
 *.csv
 
+*.pkl
 ### 폴더 ###
 .idea/
 .vscode/
