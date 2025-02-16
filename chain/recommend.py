@@ -6,7 +6,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from setup import movies_vectorstore, load_template_from_yaml
-from config import GEMINI_API_KEY
+from config import OPENAI_API_KEY
+from langchain.retrievers import BM25Retriever, EnsembleRetriever
+from langchain.schema import Document
 
 # StructuredOutputParser 사용
 recommend_response_schemas = [
@@ -24,25 +26,25 @@ recommend_chain_format_instructions = output_parser.get_format_instructions()
 
 
 # LLM 모델 생성 (1. GEMINI 2. OpenAI)
-def load_gemini():
-    model = ChatGoogleGenerativeAI(
-        model='gemini-1.5-flash',
-        temperature=0.3,
-        max_tokens=5000,
-        api_key=GEMINI_API_KEY
-    )
-    print(">>>>>>> Gemini loaded from recommend chain...")
-    return model
-
-# def load_gpt():
-#     model = ChatOpenAI(
-#         model_name='gpt-4o-mini-2024-07-18',
-#         temperature=0,
-#         max_tokens=3000,
-#         api_key=OPENAI_API_KEY
+# def load_gemini():
+#     model = ChatGoogleGenerativeAI(
+#         model='gemini-1.5-flash',
+#         temperature=0.3,
+#         max_tokens=5000,
+#         api_key=GEMINI_API_KEY
 #     )
-#     print(">>>>>>> GPT loaded from recommend chain...")
+#     print(">>>>>>> Gemini loaded from recommend chain...")
 #     return model
+
+def load_gpt():
+    model = ChatOpenAI(
+        model_name='gpt-4o-mini-2024-07-18',
+        temperature=0,
+        max_tokens=3000,
+        api_key=OPENAI_API_KEY
+    )
+    print(">>>>>>> GPT loaded from recommend chain...")
+    return model
 
 # 검색기 생성
 multiquery_chain_retriever = MultiQueryRetriever.from_llm(
@@ -53,14 +55,45 @@ multiquery_chain_retriever = MultiQueryRetriever.from_llm(
                       #  "lambda_mult": 0.8,   # 결과 다양성 조절 (default: 0.5),
                        }
     ),
-    llm = load_gemini()
+    llm = load_gpt()
 )
+
+# bm25 retriever
+# Chroma 벡터 스토어의 내부 컬렉션에서 모든 문서를 가져오기
+# docs = movies_vectorstore._collection.get(include=["documents"])
+# docs는 딕셔너리 형태로 {"ids": [...], "documents": [...], "metadatas": [...]} 와 같이 반환됨
+# raw_documents = docs.get("documents", [])
+
+# 문자열 문서들을 Document 객체로 변환 (Document 객체는 page_content 속성을 가짐)
+# all_documents = [Document(page_content=doc) for doc in raw_documents]
+
+# BM25Retriever에 문서 리스트 전달
+# bm25_retriever = BM25Retriever.from_documents(all_documents)
+# bm25_retriever.k = 10
+
+# 3. CombinedRetriever: 여러 retriever의 결과를 합치는 클래스
+# class CombinedRetriever:
+#     def __init__(self, retrievers):
+#         self.retrievers = retrievers
+
+#     def get_relevant_documents(self, query):
+#         docs = []
+#         for retriever in self.retrievers:
+#             docs.extend(retriever.get_relevant_documents(query))
+#         return docs
+
+# BM25와 MultiQueryRetriever를 결합
+# combined_retriever = CombinedRetriever(retrievers=[multiquery_chain_retriever, bm25_retriever])
+
+# callable 함수 정의: 사용자 쿼리를 받아 CombinedRetriever의 get_relevant_documents 메서드를 호출
+# def combined_retriever_callable(query):
+#     return combined_retriever.get_relevant_documents(query)
 
 # template 불러오기
 recommend_template = load_template_from_yaml("./prompts/recommend_template.yaml")
 recommend_chain_prompt = ChatPromptTemplate.from_template(recommend_template,
                                                           partial_variables={'recommend_chain_format_instructions': recommend_chain_format_instructions})
-recommend_chain_llm = load_gemini()
+recommend_chain_llm = load_gpt()
 
 # langchain 체인 구성
 recommend_chain = (

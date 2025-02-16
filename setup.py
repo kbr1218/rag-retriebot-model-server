@@ -2,7 +2,7 @@
 from langchain_teddynote import logging
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from config import LOGGING_NAME, VECTORSTORE_PATH_MOVIE, VECTORSTORE_PATH_VIEW_1
+from config import LOGGING_NAME, VECTORSTORE_PATH_MOVIE, VECTORSTORE_PATH_VIEW_1, VECTORSTORE_PATH_MOVIE2
 import yaml
 
 # langsmith 추적 설정
@@ -14,9 +14,20 @@ embeddings = HuggingFaceEmbeddings(model_name='ibm-granite/granite-embedding-278
 # 시청기록 벡터스토어 전역변수 선언
 views_vectorstore = None
 
-# 벡터스토어 로드
+# 벡터스토어 로드 -> db1
+# try:
+#     movies_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_MOVIE,
+#                                 embedding_function=embeddings)
+#     print(">>>>>> VectorStore for movies Loaded Successfully!")
+
+# except Exception as e:
+#     print(f"❌ Error Loading VectorStore: {e}")
+#     movies_vectorstore = None  # 벡터스토어 로딩 실패 시 예외 처리는 여기에
+#     views_vectorstore = None
+
+# 벡터스토어 로드 -> db2
 try:
-    movies_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_MOVIE,
+    movies_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_MOVIE2,
                                 embedding_function=embeddings)
     print(">>>>>> VectorStore for movies Loaded Successfully!")
 
@@ -33,7 +44,7 @@ def load_views_vectorstore(user_id: str):
     global views_vectorstore
     user_number = int(user_id.replace("user", ""))
 
-    if 1 <= user_number <= 17438:
+    if user_number:
         views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_1, embedding_function=embeddings)
         print(">>>>>> VectorStore for view #1 Loaded Successfully!")
     # elif 17439 <= user_number <= 41480:
