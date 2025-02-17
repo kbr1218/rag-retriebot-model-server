@@ -9,6 +9,7 @@ from functions.add_views import add_view_to_vectorstore
 from functions.fetch_movie_details import fetch_movie_details
 from functions.convert_to_json import convert_to_json
 from functions.filter_watched_content import filter_watched_contents
+from functions.make_result import make_result_for_db2
 import json
 import ast
 
@@ -100,15 +101,20 @@ def load_recommend(userid: str, user_input: UserInput):
     # 8) post_recommend_chain 실행 결괏값 asset_id로 추천 콘텐츠 상세정보 가져오기
     print(f">>>>>>>>> 최종 추천 VOD 개수: {len(final_recommendation['final_recommendations'])}")
     raw_results = fetch_movie_details(final_recommendation["final_recommendations"])
+    print(f"-----------------------------raw results here:\n{raw_results}\n")
 
     # 9) 클라이언트에게 전송할 수 있도록 JSON 형식으로 변환
-    results = {
-      str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
-      for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
-    }
+    # results = {
+    #   str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
+    #   for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
+    # }
 
+    # return {
+    #   "movies": results,
+    #   "answer": final_recommendation["response"]
+    # }
     return {
-      "movies": results,
+      "movies": make_result_for_db2(raw_results),
       "answer": final_recommendation["response"]
     }
   except Exception as e:
@@ -125,12 +131,12 @@ def load_search(userid: str, user_input: UserInput):
     raw_results = fetch_movie_details(response["asset_id"])
     print(f"\n>>>>>>>>> raw_results HERE: \n{raw_results}")
 
-    results = {
-      str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
-      for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
-    }
+    # results = {
+    #   str(index + 1): convert_to_json(json.loads(movie_data["page_content"]))
+    #   for index, (_, movie_data) in enumerate(raw_results["movie_details"].items())
+    # }
     return {
-      "movies": results,
+      "movies": make_result_for_db2(raw_results),
       "answer": response["answer"]
     }
   except Exception as e:

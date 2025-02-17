@@ -17,7 +17,8 @@ def fetch_movie_details(asset_ids: list):
     if results:
       doc = results[0]
       movie_details[asset_id] = {
-        "page_content": doc.page_content
+        "page_content": doc.page_content,
+        "metadata" : doc.metadata
       }
     else:
       movie_details[asset_id] = {"error": "영화 데이터를 찾을 수 없음"}
