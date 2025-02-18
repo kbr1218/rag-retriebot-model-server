@@ -2,7 +2,7 @@
 from langchain_teddynote import logging
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from config import LOGGING_NAME, VECTORSTORE_PATH_MOVIE, VECTORSTORE_PATH_VIEW_1, VECTORSTORE_PATH_VIEW_2, VECTORSTORE_PATH_VIEW_1000
+from config import LOGGING_NAME, VECTORSTORE_PATH_MOVIE, VECTORSTORE_PATH_VIEW_1000
 import yaml
 
 # langsmith 추적 설정
@@ -30,14 +30,7 @@ def load_views_vectorstore(user_id: str):
 
     # 임시 데이터 1000명
     views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_1000, embedding_function=embeddings)
-    # if 1 <= user_number <= 17438:
-    #     views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_1, embedding_function=embeddings)
-    #     print(">>>>>> VectorStore for view #1 Loaded Successfully!")
-    # elif 17439 <= user_number <= 41480:
-    #     views_vectorstore = Chroma(persist_directory=VECTORSTORE_PATH_VIEW_2, embedding_function=embeddings)
-    #     print(">>>>>> VectorStore for view #2 Loaded Successfully!")
-    # else:
-    #     raise ValueError(f"범위를 벗어난 user_id: {user_id}")
+
     return views_vectorstore
 
 # yaml에서 template 불러오는 함수

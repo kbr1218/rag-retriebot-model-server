@@ -13,8 +13,7 @@ def is_watched(user_id: str, asset_id: str) -> bool:
       bool: 시청했다면 True, 시청하지 않았다면 False
     """
     if setup.views_vectorstore is None:
-        print("🔄 벡터스토어가 None임 새로 로드 (is_watched.py)")
-        print(f"------------------여기: {user_id}")
+        print("벡터스토어가 None임 새로 로드 (is_watched.py)")
         setup.views_vectorstore = setup.load_views_vectorstore(user_id)
     
     watched_results = setup.views_vectorstore.similarity_search(
