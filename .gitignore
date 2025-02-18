@@ -8,7 +8,10 @@
 .idea/
 .vscode/
 */cache/*
-
+/data/
+/etc/
+/db/
+/lightfm/
 
 # templates ---------------------------------------
 ### Byte-compiled / optimized / DLL files ###
