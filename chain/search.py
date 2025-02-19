@@ -110,7 +110,7 @@ def load_gemini():
 
 def load_gpt():
     model = ChatOpenAI(
-        model_name='gpt-4o-mini',
+        model_name='gpt-4o-mini-2024-07-18',
         temperature=0,
         api_key=OPENAI_API_KEY
     )
